@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
-
+#include <sys/types.h>
+ #include <sys/wait.h>
+#include <unistd.h>
+#include <signal.h>
 
 struct datos
 {
@@ -62,19 +65,35 @@ void* primos(void* arg){
 	fclose(salida);
 	pthread_exit(0);
 }
-
+void PrimosProcesos(FILE *arc,int lin, int nomb){   
+    char nombre_salida[20];
+    //*nombre_salida = nomb + '0';
+    //strcat(nombre_salida,".txt");
+    sprintf(nombre_salida,"%d.txt",nomb);
+    FILE *salida=fopen(nombre_salida,"w");
+    int num =0;
+    int booleano;
+    for(int i=0; i < lin; i++){
+    	fscanf(arc, "%d", &num);
+    	booleano = calcularPrimos(num);
+		fprintf(salida, "%d %d\n", num,booleano);	
+    }
+    fclose(salida);
+}
+void catch_signal_ctrlC(int s)
+{
+  printf("I'm sorry dave I'm afraid I can't do that");
+  exit(0);
+}
 int main (int argc, char** argv){
 	int lineas = contarLineas(argv[1]);
 	FILE *fp = fopen(argv[1],"r");	
 	int limite = argv[3][0] - '0'; //para convertir el arg -N en int
-	limite -=1;
 	struct datos datos_t[limite - 1];
-
-	pthread_t tid[limite - 1];
-
-	for (int i = 0; i < limite; i++)
-	{
-		
+    if (strcmp("-t",argv[2])==0){
+	  pthread_t tid[limite - 1];
+	  for (int i = 0; i < limite; i++)
+	  {
 		datos_t[i].arch = fp;
 		datos_t[i].id = i;
 
@@ -89,12 +108,37 @@ int main (int argc, char** argv){
 		pthread_attr_init(&attr);
 
 		pthread_create(&tid[i],&attr,primos,&datos_t[i]);
-	}
-
-	for (int i = 0; i < limite; i++)
-	{
+	  }
+	  for (int i = 0; i < limite; i++)
+	  {
 		pthread_join(tid[i],NULL);
-	}
-
-	fclose(fp);
+	  }
+    }
+    if (strcmp("-p",argv[2])==0){
+      int pid,pid2;
+      int status;
+      if ( (pid=fork()) == 0 ){
+        for (int i = 0; i < limite; i++)
+        {
+          datos_t[i].arch = fp;
+		  datos_t[i].id = i;
+		  if (i == limite - 1)
+		  {
+			datos_t[i].lineas = (lineas/limite) + (lineas % limite);
+		  } else{
+			datos_t[i].lineas = lineas/limite;
+		  }
+		  pid2=fork();
+          if (pid2 == 0)
+           break;
+          PrimosProcesos(datos_t[i].arch,datos_t[i].lineas,datos_t[i].id);
+          signal(SIGINT, catch_signal_ctrlC);
+        }
+      }
+      else{
+      	wait(&status);
+      }
+    }
+    fclose(fp);
+	return(0);
 }
