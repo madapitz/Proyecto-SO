@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <sys/time.h>
+#include <time.h>
 
 struct datos
 {
@@ -51,10 +52,8 @@ int contarLineas(char *nombre){
 
 void* primos(void* arg){
 	struct datos *data_hilos = arg;
-	char *nombre_salida = malloc(sizeof(char));
-	*nombre_salida = data_hilos->id + '0';
-	//strcpy(nombre_salida, ch);
-	strcat(nombre_salida,".txt");
+	char nombre_salida[20];
+	sprintf(nombre_salida,"%d.txt",data_hilos->id);
 	FILE *salida=fopen(nombre_salida,"w");
 	int num =0;
 	int booleano;
@@ -96,10 +95,14 @@ int main (int argc, char** argv){
 	if(argv[4][1]){
 		limite = (argv[4][0] - '0')*10 + (argv[4][1] - '0');
 	} else{
-		limite= (argv[4][0] - '0');
+		limite = (argv[4][0] - '0');
 	}
 
 	if(limite < 1 || limite > 10) exit(1);
+
+	clock_t start,end;
+	double tiempo;
+	start = clock();
 
 	struct datos datos_t[limite - 1];
     if (strcmp("-t",argv[2])==0){
@@ -153,18 +156,10 @@ int main (int argc, char** argv){
       }
     }
     fclose(fp);
-    struct timeval ti, tf;
-    double tiempo;
-   
-    gettimeofday(&ti, NULL);   // Instante inicial
-   
-    printf("Lee este mensaje y pulsa ENTER\n");
-    getchar();
-   
-    gettimeofday(&tf, NULL);   // Instante final
-   
-    tiempo= (tf.tv_sec - ti.tv_sec)*1000 + (tf.tv_usec - ti.tv_usec)/1000.0;
-    tiempo= tiempo/1000;
-    printf("Has tardado: %g milisegundos\n", tiempo);
+    
+    end = clock();
+    tiempo = ((double) (end - start))/ CLOCKS_PER_SEC;
+    printf("El tiempo de ejecucion es %.9f\n s", tiempo);
+
 	return(0);
 }
