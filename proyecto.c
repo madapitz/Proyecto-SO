@@ -6,6 +6,7 @@
  #include <sys/wait.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/time.h>
 
 struct datos
 {
@@ -134,11 +135,25 @@ int main (int argc, char** argv){
           PrimosProcesos(datos_t[i].arch,datos_t[i].lineas,datos_t[i].id);
           signal(SIGINT, catch_signal_ctrlC);
         }
+        exit(0);
       }
       else{
       	wait(&status);
       }
     }
     fclose(fp);
+    struct timeval ti, tf;
+    double tiempo;
+   
+    gettimeofday(&ti, NULL);   // Instante inicial
+   
+    printf("Lee este mensaje y pulsa ENTER\n");
+    getchar();
+   
+    gettimeofday(&tf, NULL);   // Instante final
+   
+    tiempo= (tf.tv_sec - ti.tv_sec)*1000 + (tf.tv_usec - ti.tv_usec)/1000.0;
+    tiempo= tiempo/1000;
+    printf("Has tardado: %g milisegundos\n", tiempo);
 	return(0);
 }
