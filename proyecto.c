@@ -89,7 +89,18 @@ void catch_signal_ctrlC(int s)
 int main (int argc, char** argv){
 	int lineas = contarLineas(argv[1]);
 	FILE *fp = fopen(argv[1],"r");	
-	int limite = argv[3][0] - '0'; //para convertir el arg -N en int
+
+	if(strcmp(argv[3],"-n")!=0) exit(1);
+
+	int limite;//para convertir el arg -N en int
+	if(argv[4][1]){
+		limite = (argv[4][0] - '0')*10 + (argv[4][1] - '0');
+	} else{
+		limite= (argv[4][0] - '0');
+	}
+
+	if(limite < 1 || limite > 10) exit(1);
+
 	struct datos datos_t[limite - 1];
     if (strcmp("-t",argv[2])==0){
 	  pthread_t tid[limite - 1];
