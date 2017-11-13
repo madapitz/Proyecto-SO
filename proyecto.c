@@ -100,10 +100,6 @@ int main (int argc, char** argv){
 
 	if(limite < 1 || limite > 10) exit(1);
 
-	clock_t start,end;
-	double tiempo;
-	start = clock();
-
 	struct datos datos_t[limite - 1];
     if (strcmp("-t",argv[2])==0){
 	  pthread_t tid[limite - 1];
@@ -131,7 +127,7 @@ int main (int argc, char** argv){
     }
     if (strcmp("-p",argv[2])==0){
       int pid,pid2;
-      int status;
+      pid_t wpid;
       if ( (pid=fork()) == 0 ){
         for (int i = 0; i < limite; i++)
         {
@@ -149,17 +145,12 @@ int main (int argc, char** argv){
           PrimosProcesos(datos_t[i].arch,datos_t[i].lineas,datos_t[i].id);
           signal(SIGINT, catch_signal_ctrlC);
         }
-        exit(0);
-      }
+        exit(1);
+      } 
       else{
-      	wait(&status);
+      	for (int c=0; c < limite; c++) waitpid(pid, 0, 0);
       }
     }
     fclose(fp);
-    
-    end = clock();
-    tiempo = ((double) (end - start))/ CLOCKS_PER_SEC;
-    printf("El tiempo de ejecucion es %.9f\n s", tiempo);
-
 	return(0);
 }
